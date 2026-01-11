@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useState } from "react";
 import { Check, Circle, Clock, Star } from "lucide-react";
 import { cn } from "@/lib/utils";

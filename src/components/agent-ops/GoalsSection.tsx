@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useState } from "react";
 import { Target, User, CheckSquare, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
