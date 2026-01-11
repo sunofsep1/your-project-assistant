@@ -11,9 +11,22 @@ import {
   Database,
   Menu,
   X,
+  LayoutGrid,
+  Hash,
+  Target,
+  Search,
+  Presentation,
+  Lightbulb,
+  Settings,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -23,6 +36,16 @@ const navItems = [
   { title: "Sales Pipeline", url: "/pipeline", icon: TrendingUp },
   { title: "Campaigns", url: "/campaigns", icon: Megaphone },
   { title: "Scripts", url: "/scripts", icon: FileText },
+];
+
+const agentOpsItems = [
+  { title: "Agent Dashboard", url: "/agent-ops/dashboard", icon: LayoutDashboard },
+  { title: "Numbers", url: "/agent-ops/numbers", icon: Hash },
+  { title: "Goals", url: "/agent-ops/goals", icon: Target },
+  { title: "Prospecting", url: "/agent-ops/prospecting", icon: Search },
+  { title: "Marketing", url: "/agent-ops/marketing", icon: Presentation },
+  { title: "Strategy", url: "/agent-ops/strategy", icon: Lightbulb },
+  { title: "Settings", url: "/agent-ops/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -70,7 +93,7 @@ export function AppSidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = location.pathname === item.url;
             return (
@@ -90,6 +113,38 @@ export function AppSidebar() {
               </NavLink>
             );
           })}
+
+          {/* Agent Ops Hub Section */}
+          <Collapsible defaultOpen={location.pathname.startsWith("/agent-ops")}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-all duration-200 mt-2">
+              <div className="flex items-center gap-3">
+                <LayoutGrid className="w-5 h-5" />
+                <span>Agent Ops Hub</span>
+              </div>
+              <ChevronDown className="w-4 h-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-4 space-y-1 mt-1">
+              {agentOpsItems.map((item) => {
+                const isActive = location.pathname === item.url;
+                return (
+                  <NavLink
+                    key={item.title}
+                    to={item.url}
+                    onClick={() => setIsOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                    )}
+                  >
+                    <item.icon className={cn("w-4 h-4", isActive && "text-primary")} />
+                    <span>{item.title}</span>
+                  </NavLink>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
         </nav>
       </aside>
 
