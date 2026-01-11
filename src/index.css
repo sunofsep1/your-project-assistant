@@ -51,6 +51,10 @@
     --warning-foreground: 222 47% 6%;
     --info: 199 89% 48%;
     --info-foreground: 210 40% 98%;
+    
+    /* Teal accent */
+    --teal: 168 76% 42%;
+    --teal-foreground: 210 40% 98%;
 
     /* Gradient cards */
     --gradient-total: linear-gradient(135deg, hsl(222 47% 12%) 0%, hsl(222 47% 16%) 100%);
@@ -58,6 +62,12 @@
     --gradient-planning: linear-gradient(135deg, hsl(263 50% 25%) 0%, hsl(263 50% 35%) 100%);
     --gradient-completed: linear-gradient(135deg, hsl(142 50% 20%) 0%, hsl(142 50% 28%) 100%);
     --gradient-cancelled: linear-gradient(135deg, hsl(0 50% 25%) 0%, hsl(0 50% 32%) 100%);
+    
+    /* KPI card gradients */
+    --gradient-appointments: linear-gradient(135deg, hsl(263 70% 25%) 0%, hsl(263 70% 35%) 100%);
+    --gradient-listings: linear-gradient(135deg, hsl(168 76% 22%) 0%, hsl(168 76% 32%) 100%);
+    --gradient-closings: linear-gradient(135deg, hsl(199 89% 25%) 0%, hsl(199 89% 35%) 100%);
+    --gradient-volume: linear-gradient(135deg, hsl(142 76% 22%) 0%, hsl(142 76% 32%) 100%);
   }
 
   .dark {
@@ -101,6 +111,23 @@
 
   .stat-card-cancelled {
     background: var(--gradient-cancelled);
+  }
+  
+  /* KPI Card variants */
+  .kpi-card-appointments {
+    background: var(--gradient-appointments);
+  }
+  
+  .kpi-card-listings {
+    background: var(--gradient-listings);
+  }
+  
+  .kpi-card-closings {
+    background: var(--gradient-closings);
+  }
+  
+  .kpi-card-volume {
+    background: var(--gradient-volume);
   }
 
   .pipeline-column {
