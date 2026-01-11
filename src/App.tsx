@@ -13,6 +13,13 @@ import Pipeline from "./pages/Pipeline";
 import Campaigns from "./pages/Campaigns";
 import Scripts from "./pages/Scripts";
 import NotFound from "./pages/NotFound";
+import AgentDashboard from "./pages/agent-ops/AgentDashboard";
+import Numbers from "./pages/agent-ops/Numbers";
+import Goals from "./pages/agent-ops/Goals";
+import Prospecting from "./pages/agent-ops/Prospecting";
+import Marketing from "./pages/agent-ops/Marketing";
+import Strategy from "./pages/agent-ops/Strategy";
+import Settings from "./pages/agent-ops/Settings";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +38,13 @@ const App = () => (
           <Route path="/pipeline" element={<MainLayout><Pipeline /></MainLayout>} />
           <Route path="/campaigns" element={<MainLayout><Campaigns /></MainLayout>} />
           <Route path="/scripts" element={<MainLayout><Scripts /></MainLayout>} />
+          <Route path="/agent-ops/dashboard" element={<MainLayout><AgentDashboard /></MainLayout>} />
+          <Route path="/agent-ops/numbers" element={<MainLayout><Numbers /></MainLayout>} />
+          <Route path="/agent-ops/goals" element={<MainLayout><Goals /></MainLayout>} />
+          <Route path="/agent-ops/prospecting" element={<MainLayout><Prospecting /></MainLayout>} />
+          <Route path="/agent-ops/marketing" element={<MainLayout><Marketing /></MainLayout>} />
+          <Route path="/agent-ops/strategy" element={<MainLayout><Strategy /></MainLayout>} />
+          <Route path="/agent-ops/settings" element={<MainLayout><Settings /></MainLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
