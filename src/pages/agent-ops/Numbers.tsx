@@ -1,4 +1,7 @@
+import * as React from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { NumbersKPIGrid } from "@/components/agent-ops/NumbersKPIGrid";
+import { NumbersCharts } from "@/components/agent-ops/NumbersCharts";
 
 const Numbers = () => {
   return (
@@ -7,7 +10,8 @@ const Numbers = () => {
         title="Numbers" 
         description="Track your key performance numbers and statistics"
       />
-      <div className="text-muted-foreground">Numbers content coming soon...</div>
+      <NumbersKPIGrid />
+      <NumbersCharts />
     </div>
   );
 };
