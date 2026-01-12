@@ -1,4 +1,8 @@
+import * as React from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { ContentCalendar } from "@/components/agent-ops/ContentCalendar";
+import { CampaignManager } from "@/components/agent-ops/CampaignManager";
+import { MarketingROI } from "@/components/agent-ops/MarketingROI";
 
 const Marketing = () => {
   return (
@@ -7,7 +11,11 @@ const Marketing = () => {
         title="Marketing" 
         description="Plan and execute your marketing strategies"
       />
-      <div className="text-muted-foreground">Marketing content coming soon...</div>
+      <ContentCalendar />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CampaignManager />
+        <MarketingROI />
+      </div>
     </div>
   );
 };
