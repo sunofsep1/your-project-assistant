@@ -2,6 +2,7 @@ import * as React from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { NumbersKPIGrid } from "@/components/agent-ops/NumbersKPIGrid";
 import { NumbersCharts } from "@/components/agent-ops/NumbersCharts";
+import { LogActivityForm } from "@/components/agent-ops/LogActivityForm";
 
 const Numbers = () => {
   return (
@@ -10,6 +11,7 @@ const Numbers = () => {
         title="Numbers" 
         description="Track your key performance numbers and statistics"
       />
+      <LogActivityForm />
       <NumbersKPIGrid />
       <NumbersCharts />
     </div>
