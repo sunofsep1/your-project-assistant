@@ -14,7 +14,218 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activities: {
+        Row: {
+          appointments_set: number | null
+          calls_made: number | null
+          closings: number | null
+          contracts_signed: number | null
+          created_at: string
+          date: string
+          gci_earned: number | null
+          id: string
+          listings_taken: number | null
+          offers_written: number | null
+          user_id: string
+        }
+        Insert: {
+          appointments_set?: number | null
+          calls_made?: number | null
+          closings?: number | null
+          contracts_signed?: number | null
+          created_at?: string
+          date?: string
+          gci_earned?: number | null
+          id?: string
+          listings_taken?: number | null
+          offers_written?: number | null
+          user_id: string
+        }
+        Update: {
+          appointments_set?: number | null
+          calls_made?: number | null
+          closings?: number | null
+          contracts_signed?: number | null
+          created_at?: string
+          date?: string
+          gci_earned?: number | null
+          id?: string
+          listings_taken?: number | null
+          offers_written?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      appointments: {
+        Row: {
+          contact_id: string | null
+          created_at: string
+          date: string
+          id: string
+          location: string | null
+          notes: string | null
+          status: string | null
+          title: string
+          type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          status?: string | null
+          title: string
+          type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          status?: string | null
+          title?: string
+          type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contacts: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          source: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      kpi_goals: {
+        Row: {
+          appointments_set_goal: number | null
+          calls_made_goal: number | null
+          closings_goal: number | null
+          contracts_signed_goal: number | null
+          gci_earned_goal: number | null
+          id: string
+          listings_taken_goal: number | null
+          offers_written_goal: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          appointments_set_goal?: number | null
+          calls_made_goal?: number | null
+          closings_goal?: number | null
+          contracts_signed_goal?: number | null
+          gci_earned_goal?: number | null
+          id?: string
+          listings_taken_goal?: number | null
+          offers_written_goal?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          appointments_set_goal?: number | null
+          calls_made_goal?: number | null
+          closings_goal?: number | null
+          contracts_signed_goal?: number | null
+          gci_earned_goal?: number | null
+          id?: string
+          listings_taken_goal?: number | null
+          offers_written_goal?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      listings: {
+        Row: {
+          address: string
+          bathrooms: number | null
+          bedrooms: number | null
+          created_at: string
+          id: string
+          notes: string | null
+          price: number | null
+          property_type: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          price?: number | null
+          property_type?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          price?: number | null
+          property_type?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
