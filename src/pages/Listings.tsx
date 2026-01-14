@@ -5,98 +5,106 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Card } from "@/components/ui/card";
-import { Plus, MapPin, Bed, Bath, Maximize, Trash2, Pencil } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Plus, MapPin, Bed, Bath, Trash2, Pencil, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useListings, useCreateListing, useUpdateListing, useDeleteListing, Listing } from "@/hooks/useListings";
 
-interface Listing {
-  id: string;
-  address: string;
-  suburb: string;
-  price: number;
-  bedrooms: number;
-  bathrooms: number;
-  landSize: number;
-  propertyType: "house" | "apartment" | "townhouse" | "land";
-  status: "active" | "pending" | "sold" | "withdrawn";
-  description: string;
-}
+type ListingStatus = "active" | "pending" | "sold" | "withdrawn";
+type PropertyType = "house" | "apartment" | "townhouse" | "land";
 
-const mockListings: Listing[] = [
-  {
-    id: "1",
-    address: "33/30-46 Edina Street",
-    suburb: "Thornlands",
-    price: 750000,
-    bedrooms: 2,
-    bathrooms: 2,
-    landSize: 120,
-    propertyType: "apartment",
-    status: "active",
-    description: "Beautiful apartment with modern finishes",
-  },
-];
-
-const createEmptyListing = (): Omit<Listing, 'id'> => ({
+const createEmptyListing = () => ({
   address: "",
-  suburb: "",
   price: 0,
   bedrooms: 0,
   bathrooms: 0,
-  landSize: 0,
-  propertyType: "house",
-  status: "active",
-  description: "",
+  property_type: "house" as PropertyType,
+  status: "active" as ListingStatus,
+  notes: "",
 });
 
 export default function Listings() {
-  const [listings, setListings] = useState<Listing[]>(mockListings);
+  const { data: listings, isLoading } = useListings();
+  const createListing = useCreateListing();
+  const updateListing = useUpdateListing();
+  const deleteListing = useDeleteListing();
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newListing, setNewListing] = useState<Omit<Listing, 'id'>>(createEmptyListing());
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingListing, setEditingListing] = useState<Listing | null>(null);
+  const [formData, setFormData] = useState(createEmptyListing());
   const { toast } = useToast();
 
-  const handleSaveListing = () => {
-    if (!newListing.address.trim()) {
+  const handleOpenDialog = (listing?: Listing) => {
+    if (listing) {
+      setEditingListing(listing);
+      setFormData({
+        address: listing.address,
+        price: Number(listing.price) || 0,
+        bedrooms: listing.bedrooms || 0,
+        bathrooms: Number(listing.bathrooms) || 0,
+        property_type: (listing.property_type as PropertyType) || "house",
+        status: (listing.status as ListingStatus) || "active",
+        notes: listing.notes || "",
+      });
+    } else {
+      setEditingListing(null);
+      setFormData(createEmptyListing());
+    }
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveListing = async () => {
+    if (!formData.address.trim()) {
       toast({ title: "Error", description: "Please enter an address", variant: "destructive" });
       return;
     }
 
-    if (editingId) {
-      setListings(listings.map(l => l.id === editingId ? { ...newListing, id: editingId } : l));
-      toast({ title: "Success", description: "Listing updated!" });
-    } else {
-      const listing: Listing = {
-        id: Date.now().toString(),
-        ...newListing,
-      };
-      setListings([listing, ...listings]);
-      toast({ title: "Success", description: "Listing added!" });
+    try {
+      if (editingListing) {
+        await updateListing.mutateAsync({
+          id: editingListing.id,
+          ...formData,
+        });
+        toast({ title: "Success", description: "Listing updated!" });
+      } else {
+        await createListing.mutateAsync(formData);
+        toast({ title: "Success", description: "Listing added!" });
+      }
+      setIsDialogOpen(false);
+      setFormData(createEmptyListing());
+      setEditingListing(null);
+    } catch (error: any) {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to save listing", 
+        variant: "destructive" 
+      });
     }
-
-    setNewListing(createEmptyListing());
-    setEditingId(null);
-    setIsDialogOpen(false);
   };
 
-  const handleEdit = (listing: Listing) => {
-    setNewListing(listing);
-    setEditingId(listing.id);
-    setIsDialogOpen(true);
+  const handleDeleteListing = async (id: string) => {
+    try {
+      await deleteListing.mutateAsync(id);
+      toast({ title: "Deleted", description: "Listing removed" });
+    } catch (error: any) {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to delete listing", 
+        variant: "destructive" 
+      });
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setListings(listings.filter(l => l.id !== id));
-    toast({ title: "Deleted", description: "Listing removed" });
-  };
-
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | null) => {
+    if (!price) return "$0";
     return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }).format(price);
   };
 
-  const getStatusVariant = (status: string) => {
+  const getStatusVariant = (status: string | null) => {
     switch (status) {
       case "active": return "active";
       case "pending": return "warm";
@@ -105,6 +113,17 @@ export default function Listings() {
       default: return "default";
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="animate-fade-in">
+        <PageHeader title="Listings" description="Manage your property listings" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-48" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in">
@@ -115,19 +134,19 @@ export default function Listings() {
           <Dialog open={isDialogOpen} onOpenChange={(open) => {
             setIsDialogOpen(open);
             if (!open) {
-              setNewListing(createEmptyListing());
-              setEditingId(null);
+              setFormData(createEmptyListing());
+              setEditingListing(null);
             }
           }}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button className="gap-2" onClick={() => handleOpenDialog()}>
                 <Plus className="w-4 h-4" />
                 Add Listing
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] bg-popover border-border">
               <DialogHeader>
-                <DialogTitle>{editingId ? "Edit Listing" : "Add New Listing"}</DialogTitle>
+                <DialogTitle>{editingListing ? "Edit Listing" : "Add New Listing"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4 max-h-[60vh] overflow-y-auto pr-2">
                 <div className="space-y-2">
@@ -135,17 +154,8 @@ export default function Listings() {
                   <Input
                     placeholder="Street address"
                     className="bg-input"
-                    value={newListing.address}
-                    onChange={(e) => setNewListing({ ...newListing, address: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Suburb</Label>
-                  <Input
-                    placeholder="Suburb"
-                    className="bg-input"
-                    value={newListing.suburb}
-                    onChange={(e) => setNewListing({ ...newListing, suburb: e.target.value })}
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -155,15 +165,15 @@ export default function Listings() {
                       type="number"
                       placeholder="0"
                       className="bg-input"
-                      value={newListing.price || ""}
-                      onChange={(e) => setNewListing({ ...newListing, price: Number(e.target.value) })}
+                      value={formData.price || ""}
+                      onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Property Type</Label>
                     <Select
-                      value={newListing.propertyType}
-                      onValueChange={(value: Listing["propertyType"]) => setNewListing({ ...newListing, propertyType: value })}
+                      value={formData.property_type}
+                      onValueChange={(value: PropertyType) => setFormData({ ...formData, property_type: value })}
                     >
                       <SelectTrigger className="bg-input">
                         <SelectValue />
@@ -177,40 +187,32 @@ export default function Listings() {
                     </Select>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Bedrooms</Label>
                     <Input
                       type="number"
                       className="bg-input"
-                      value={newListing.bedrooms || ""}
-                      onChange={(e) => setNewListing({ ...newListing, bedrooms: Number(e.target.value) })}
+                      value={formData.bedrooms || ""}
+                      onChange={(e) => setFormData({ ...formData, bedrooms: Number(e.target.value) })}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Bathrooms</Label>
                     <Input
                       type="number"
+                      step="0.5"
                       className="bg-input"
-                      value={newListing.bathrooms || ""}
-                      onChange={(e) => setNewListing({ ...newListing, bathrooms: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Land Size (m²)</Label>
-                    <Input
-                      type="number"
-                      className="bg-input"
-                      value={newListing.landSize || ""}
-                      onChange={(e) => setNewListing({ ...newListing, landSize: Number(e.target.value) })}
+                      value={formData.bathrooms || ""}
+                      onChange={(e) => setFormData({ ...formData, bathrooms: Number(e.target.value) })}
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <Select
-                    value={newListing.status}
-                    onValueChange={(value: Listing["status"]) => setNewListing({ ...newListing, status: value })}
+                    value={formData.status}
+                    onValueChange={(value: ListingStatus) => setFormData({ ...formData, status: value })}
                   >
                     <SelectTrigger className="bg-input">
                       <SelectValue />
@@ -224,18 +226,23 @@ export default function Listings() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Description</Label>
+                  <Label>Notes</Label>
                   <Textarea
                     placeholder="Property description..."
                     className="bg-input min-h-[80px]"
-                    value={newListing.description}
-                    onChange={(e) => setNewListing({ ...newListing, description: e.target.value })}
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   />
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-6">
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleSaveListing}>{editingId ? "Update" : "Add"} Listing</Button>
+                <Button 
+                  onClick={handleSaveListing}
+                  disabled={createListing.isPending || updateListing.isPending}
+                >
+                  {(createListing.isPending || updateListing.isPending) ? "Saving..." : editingListing ? "Update" : "Add"} Listing
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -243,46 +250,65 @@ export default function Listings() {
       />
 
       {/* Listings Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {listings.map((listing) => (
-          <Card key={listing.id} className="p-4 bg-card border-border">
-            <div className="flex items-start justify-between mb-3">
-              <StatusBadge variant={getStatusVariant(listing.status)}>{listing.status}</StatusBadge>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(listing)}>
-                  <Pencil className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(listing.id)}>
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+      {listings && listings.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {listings.map((listing) => (
+            <Card key={listing.id} className="p-4 bg-card border-border">
+              <div className="flex items-start justify-between mb-3">
+                <StatusBadge variant={getStatusVariant(listing.status)}>{listing.status || "active"}</StatusBadge>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenDialog(listing)}>
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Listing</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this listing? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDeleteListing(listing.id)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
-            </div>
-            <h3 className="font-semibold text-foreground mb-1">{listing.address}</h3>
-            <p className="text-sm text-muted-foreground flex items-center gap-1 mb-3">
-              <MapPin className="w-3 h-3" />
-              {listing.suburb}
-            </p>
-            <p className="text-2xl font-bold text-primary mb-3">{formatPrice(listing.price)}</p>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Bed className="w-4 h-4" />
-                {listing.bedrooms}
-              </span>
-              <span className="flex items-center gap-1">
-                <Bath className="w-4 h-4" />
-                {listing.bathrooms}
-              </span>
-              <span className="flex items-center gap-1">
-                <Maximize className="w-4 h-4" />
-                {listing.landSize}m²
-              </span>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      {listings.length === 0 && (
+              <h3 className="font-semibold text-foreground mb-1">{listing.address}</h3>
+              {listing.property_type && (
+                <p className="text-sm text-muted-foreground flex items-center gap-1 mb-3">
+                  <MapPin className="w-3 h-3" />
+                  {listing.property_type}
+                </p>
+              )}
+              <p className="text-2xl font-bold text-primary mb-3">{formatPrice(Number(listing.price))}</p>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                {listing.bedrooms !== null && (
+                  <span className="flex items-center gap-1">
+                    <Bed className="w-4 h-4" />
+                    {listing.bedrooms}
+                  </span>
+                )}
+                {listing.bathrooms !== null && (
+                  <span className="flex items-center gap-1">
+                    <Bath className="w-4 h-4" />
+                    {listing.bathrooms}
+                  </span>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
         <div className="text-center py-12 text-muted-foreground">
+          <Building2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <p>No listings yet. Add your first property listing!</p>
         </div>
       )}
