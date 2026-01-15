@@ -21,13 +21,8 @@ interface Campaign {
   contacts: number;
 }
 
-const mockCampaigns: Campaign[] = [
-  { id: "1", name: "Ask me any real estate question???", status: "planning", type: "outreach", startDate: "2026-02-09", budget: 5500, contacts: 100 },
-  { id: "2", name: "Cash Giveaway", status: "planning", type: "outreach", startDate: "2026-01-18", budget: 3000, contacts: 200 },
-];
-
 export default function Campaigns() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newCampaign, setNewCampaign] = useState<{ name: string; type: Campaign["type"]; status: Campaign["status"]; startDate: string; budget: string; contacts: string }>({ name: "", type: "outreach", status: "planning", startDate: "", budget: "", contacts: "" });
