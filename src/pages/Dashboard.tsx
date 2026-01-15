@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card } from "@/components/ui/card";
@@ -8,15 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, TrendingUp, Megaphone, Calendar, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Users, TrendingUp, Megaphone, Calendar, ArrowUpRight, ArrowDownRight, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-const recentActivity = [
-  { type: "contact", message: "New contact added: John Smith", time: "2 hours ago" },
-  { type: "deal", message: "Deal moved to Qualified: Property Sale", time: "3 hours ago" },
-  { type: "campaign", message: "Campaign started: Q1 Outreach", time: "5 hours ago" },
-  { type: "appointment", message: "Meeting scheduled with Sarah Johnson", time: "1 day ago" },
-];
+import { useContacts } from "@/hooks/useContacts";
+import { useAppointments } from "@/hooks/useAppointments";
+import { format, formatDistanceToNow } from "date-fns";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -32,12 +28,46 @@ export default function Dashboard() {
   const [newCampaign, setNewCampaign] = useState({ name: "", type: "email", description: "" });
   const [newAppointment, setNewAppointment] = useState({ title: "", date: "", time: "", location: "" });
 
+  // Fetch real data from database
+  const { data: contacts = [] } = useContacts();
+  const { data: appointments = [] } = useAppointments();
+
   const stats = [
-    { label: "Total Contacts", value: 6, change: "+12%", positive: true },
-    { label: "Active Deals", value: 0, change: "0%", positive: true },
-    { label: "Campaigns", value: 2, change: "+50%", positive: true },
-    { label: "Appointments", value: 0, change: "0%", positive: true },
+    { label: "Total Contacts", value: contacts.length, change: "", positive: true },
+    { label: "Active Deals", value: 0, change: "", positive: true },
+    { label: "Campaigns", value: 0, change: "", positive: true },
+    { label: "Appointments", value: appointments.length, change: "", positive: true },
   ];
+
+  // Build recent activity from real data
+  const recentActivity = useMemo(() => {
+    const activities: { type: string; message: string; time: string; date: Date }[] = [];
+
+    // Add recent contacts
+    contacts.slice(0, 5).forEach((contact) => {
+      activities.push({
+        type: "contact",
+        message: `New contact added: ${contact.name}`,
+        time: formatDistanceToNow(new Date(contact.created_at), { addSuffix: true }),
+        date: new Date(contact.created_at),
+      });
+    });
+
+    // Add recent appointments
+    appointments.slice(0, 5).forEach((apt) => {
+      activities.push({
+        type: "appointment",
+        message: `Appointment scheduled: ${apt.title}`,
+        time: formatDistanceToNow(new Date(apt.created_at), { addSuffix: true }),
+        date: new Date(apt.created_at),
+      });
+    });
+
+    // Sort by date and take the most recent 5
+    return activities
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .slice(0, 5);
+  }, [contacts, appointments]);
 
   const handleAddContact = () => {
     if (!newContact.name.trim()) {
@@ -103,10 +133,6 @@ export default function Dashboard() {
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
                 <p className="text-3xl font-bold text-foreground mt-1">{stat.value}</p>
               </div>
-              <div className={`flex items-center gap-1 text-sm ${stat.positive ? 'text-success' : 'text-destructive'}`}>
-                {stat.positive ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                {stat.change}
-              </div>
             </div>
           </Card>
         ))}
@@ -132,17 +158,24 @@ export default function Dashboard() {
           {/* Recent Activity */}
           <Card className="p-6 bg-card border-border">
             <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
-            <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-start gap-3 pb-3 border-b border-border last:border-0">
-                  <div className="w-2 h-2 rounded-full bg-primary mt-2" />
-                  <div className="flex-1">
-                    <p className="text-sm text-foreground">{activity.message}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
+            {recentActivity.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                <Clock className="w-8 h-8 mb-2 opacity-50" />
+                <p className="text-sm">No recent activity yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentActivity.map((activity, index) => (
+                  <div key={index} className="flex items-start gap-3 pb-3 border-b border-border last:border-0">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2" />
+                    <div className="flex-1">
+                      <p className="text-sm text-foreground">{activity.message}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </Card>
 
           {/* Quick Actions */}
