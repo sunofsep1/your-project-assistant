@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { useRealtimeSubscription } from "./useRealtimeSubscription";
 
 export type KPIGoals = Tables<"kpi_goals">;
 export type KPIGoalsInsert = TablesInsert<"kpi_goals">;
@@ -17,6 +18,9 @@ const defaultGoals = {
 };
 
 export function useKPIGoals() {
+  // Subscribe to realtime changes
+  useRealtimeSubscription("kpi_goals", [["kpi_goals"]]);
+
   return useQuery({
     queryKey: ["kpi_goals"],
     queryFn: async () => {

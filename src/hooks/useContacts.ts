@@ -1,12 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { useRealtimeSubscription } from "./useRealtimeSubscription";
 
 export type Contact = Tables<"contacts">;
 export type ContactInsert = TablesInsert<"contacts">;
 export type ContactUpdate = TablesUpdate<"contacts">;
 
 export function useContacts() {
+  // Subscribe to realtime changes
+  useRealtimeSubscription("contacts", [["contacts"]]);
+
   return useQuery({
     queryKey: ["contacts"],
     queryFn: async () => {
