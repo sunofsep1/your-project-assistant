@@ -13,13 +13,7 @@ interface Task {
   completed: boolean;
 }
 
-const initialTasks: Task[] = [
-  { id: "1", title: "Follow up with Smith family about offer", priority: "high", time: "9:00 AM", completed: false },
-  { id: "2", title: "Prepare listing presentation for 123 Oak St", priority: "high", time: "11:00 AM", completed: false },
-  { id: "3", title: "Call back expired listing leads", priority: "medium", time: "2:00 PM", completed: false },
-  { id: "4", title: "Review market analysis for downtown condos", priority: "medium", completed: false },
-  { id: "5", title: "Send weekly newsletter to sphere of influence", priority: "low", completed: false },
-];
+const initialTasks: Task[] = [];
 
 const priorityColors = {
   high: "text-destructive",
@@ -53,7 +47,7 @@ export function TodaysFocus() {
             Today's Focus
           </CardTitle>
           <span className="text-sm text-muted-foreground">
-            {completedCount}/{tasks.length} completed
+            {tasks.length === 0 ? "No tasks yet" : `${completedCount}/${tasks.length} completed`}
           </span>
         </div>
       </CardHeader>

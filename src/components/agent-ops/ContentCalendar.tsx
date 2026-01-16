@@ -40,14 +40,7 @@ const typeColors = {
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const mockPosts: ContentPost[] = [
-  { id: "1", title: "New Listing: 123 Oak Street", platform: "instagram", date: "Mon", time: "9:00 AM", status: "scheduled", type: "listing" },
-  { id: "2", title: "Market Update Q1 2024", platform: "linkedin", date: "Tue", time: "11:00 AM", status: "scheduled", type: "market-update" },
-  { id: "3", title: "5 Tips for First-Time Buyers", platform: "facebook", date: "Wed", time: "2:00 PM", status: "draft", type: "tips" },
-  { id: "4", title: "Behind the scenes at open house", platform: "instagram", date: "Thu", time: "4:00 PM", status: "scheduled", type: "personal" },
-  { id: "5", title: "Client Success Story - The Johnsons", platform: "facebook", date: "Fri", time: "10:00 AM", status: "scheduled", type: "testimonial" },
-  { id: "6", title: "Weekend Open House Announcement", platform: "instagram", date: "Sat", time: "8:00 AM", status: "scheduled", type: "listing" },
-];
+const mockPosts: ContentPost[] = [];
 
 export function ContentCalendar() {
   const [currentWeek] = useState("Jan 8 - 14, 2024");

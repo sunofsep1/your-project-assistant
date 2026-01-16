@@ -19,13 +19,7 @@ interface Lead {
   nextFollowUp: string;
 }
 
-const initialLeads: Lead[] = [
-  { id: "1", name: "John Smith", email: "john@email.com", phone: "(555) 123-4567", source: "Website", status: "new", lastContact: "Today", nextFollowUp: "Tomorrow" },
-  { id: "2", name: "Sarah Johnson", email: "sarah@email.com", phone: "(555) 234-5678", source: "Referral", status: "contacted", lastContact: "Yesterday", nextFollowUp: "In 2 days" },
-  { id: "3", name: "Mike Davis", email: "mike@email.com", phone: "(555) 345-6789", source: "Open House", status: "qualified", lastContact: "2 days ago", nextFollowUp: "Today" },
-  { id: "4", name: "Emily Brown", email: "emily@email.com", phone: "(555) 456-7890", source: "Cold Call", status: "nurturing", lastContact: "1 week ago", nextFollowUp: "In 3 days" },
-  { id: "5", name: "David Wilson", email: "david@email.com", phone: "(555) 567-8901", source: "Social Media", status: "new", lastContact: "3 days ago", nextFollowUp: "Tomorrow" },
-];
+const initialLeads: Lead[] = [];
 
 const statusColors = {
   new: "bg-blue-500/20 text-blue-400 border-blue-500/30",

@@ -12,29 +12,11 @@ interface MarketStat {
   icon: React.ReactNode;
 }
 
-const marketStats: MarketStat[] = [
-  { label: "Median Price", value: "$425,000", change: 5.2, icon: <DollarSign className="w-4 h-4" /> },
-  { label: "Active Listings", value: "342", change: -8.4, icon: <Home className="w-4 h-4" /> },
-  { label: "Days on Market", value: "28", change: -12.5, icon: <Clock className="w-4 h-4" /> },
-  { label: "Sale/List Ratio", value: "98.5%", change: 1.8, icon: <BarChart3 className="w-4 h-4" /> },
-];
+const marketStats: MarketStat[] = [];
 
-const priceHistory = [
-  { month: "Jul", price: 395 },
-  { month: "Aug", price: 402 },
-  { month: "Sep", price: 398 },
-  { month: "Oct", price: 410 },
-  { month: "Nov", price: 418 },
-  { month: "Dec", price: 425 },
-];
+const priceHistory: { month: string; price: number }[] = [];
 
-const neighborhoods = [
-  { name: "Downtown", avgPrice: 550000, change: 8.2, inventory: 45 },
-  { name: "Westside", avgPrice: 425000, change: 4.5, inventory: 78 },
-  { name: "Northgate", avgPrice: 380000, change: 2.1, inventory: 92 },
-  { name: "Eastlake", avgPrice: 485000, change: -1.2, inventory: 34 },
-  { name: "Southend", avgPrice: 320000, change: 6.8, inventory: 67 },
-];
+const neighborhoods: { name: string; avgPrice: number; change: number; inventory: number }[] = [];
 
 export function MarketAnalysis() {
   return (

@@ -16,14 +16,7 @@ interface LeadSource {
   color: string;
 }
 
-const initialSources: LeadSource[] = [
-  { id: "1", name: "Website", icon: <Globe className="w-4 h-4" />, leads: 45, conversions: 8, color: "bg-purple-500" },
-  { id: "2", name: "Referrals", icon: <Users className="w-4 h-4" />, leads: 28, conversions: 12, color: "bg-teal-500" },
-  { id: "3", name: "Cold Calls", icon: <Phone className="w-4 h-4" />, leads: 67, conversions: 5, color: "bg-blue-500" },
-  { id: "4", name: "Open Houses", icon: <Home className="w-4 h-4" />, leads: 23, conversions: 6, color: "bg-amber-500" },
-  { id: "5", name: "Email Campaigns", icon: <Mail className="w-4 h-4" />, leads: 89, conversions: 7, color: "bg-green-500" },
-  { id: "6", name: "Social Media", icon: <Share2 className="w-4 h-4" />, leads: 56, conversions: 4, color: "bg-pink-500" },
-];
+const initialSources: LeadSource[] = [];
 
 export function LeadSourcesWidget() {
   const [sources] = useState<LeadSource[]>(initialSources);

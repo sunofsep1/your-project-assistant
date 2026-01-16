@@ -15,18 +15,9 @@ interface Goal {
   unit: string;
 }
 
-const workGoals: Goal[] = [
-  { id: "1", title: "Close 2 deals this month", current: 1, target: 2, unit: "deals" },
-  { id: "2", title: "Get 5 new listings", current: 3, target: 5, unit: "listings" },
-  { id: "3", title: "Make 100 prospecting calls", current: 67, target: 100, unit: "calls" },
-  { id: "4", title: "Host 3 open houses", current: 2, target: 3, unit: "open houses" },
-];
+const workGoals: Goal[] = [];
 
-const personalGoals: Goal[] = [
-  { id: "1", title: "Complete online course", current: 4, target: 8, unit: "modules" },
-  { id: "2", title: "Attend 2 networking events", current: 1, target: 2, unit: "events" },
-  { id: "3", title: "Read 1 real estate book", current: 0, target: 1, unit: "books" },
-];
+const personalGoals: Goal[] = [];
 
 interface TaskItem {
   id: string;
@@ -35,12 +26,7 @@ interface TaskItem {
   dueDate?: string;
 }
 
-const taskItems: TaskItem[] = [
-  { id: "1", title: "Update CRM with new leads", completed: true },
-  { id: "2", title: "Schedule property photos for Oak St", completed: false, dueDate: "Tomorrow" },
-  { id: "3", title: "Review and sign listing agreement", completed: false, dueDate: "Jan 13" },
-  { id: "4", title: "Prepare comparative market analysis", completed: false, dueDate: "Jan 14" },
-];
+const taskItems: TaskItem[] = [];
 
 function GoalItem({ goal }: { goal: Goal }) {
   const percentage = Math.round((goal.current / goal.target) * 100);

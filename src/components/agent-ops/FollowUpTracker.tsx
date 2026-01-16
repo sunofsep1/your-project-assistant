@@ -18,13 +18,7 @@ interface FollowUp {
   overdue: boolean;
 }
 
-const initialFollowUps: FollowUp[] = [
-  { id: "1", contactName: "John Smith", type: "call", dueDate: "Today, 10:00 AM", priority: "high", notes: "Discuss pricing options", completed: false, overdue: false },
-  { id: "2", contactName: "Sarah Johnson", type: "email", dueDate: "Today, 2:00 PM", priority: "medium", notes: "Send market analysis", completed: false, overdue: false },
-  { id: "3", contactName: "Mike Davis", type: "call", dueDate: "Yesterday", priority: "high", notes: "Follow up on showing", completed: false, overdue: true },
-  { id: "4", contactName: "Emily Brown", type: "text", dueDate: "Tomorrow, 9:00 AM", priority: "low", notes: "Check-in on home search", completed: false, overdue: false },
-  { id: "5", contactName: "David Wilson", type: "email", dueDate: "Today, 4:00 PM", priority: "medium", notes: "Send listing photos", completed: true, overdue: false },
-];
+const initialFollowUps: FollowUp[] = [];
 
 const typeIcons = {
   call: <Phone className="w-4 h-4" />,
