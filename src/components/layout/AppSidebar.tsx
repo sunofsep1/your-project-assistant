@@ -19,6 +19,7 @@ import {
   Lightbulb,
   Settings,
   ChevronDown,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -51,6 +53,7 @@ const agentOpsItems = [
 export function AppSidebar() {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const { signOut, user } = useAuth();
 
   return (
     <>
@@ -146,6 +149,21 @@ export function AppSidebar() {
             </CollapsibleContent>
           </Collapsible>
         </nav>
+
+        {/* User & Logout */}
+        <div className="p-3 border-t border-sidebar-border">
+          <div className="px-3 py-2 text-xs text-muted-foreground truncate mb-2">
+            {user?.email}
+          </div>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50"
+            onClick={signOut}
+          >
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </Button>
+        </div>
       </aside>
 
       {/* Spacer for mobile when sidebar is hidden */}
