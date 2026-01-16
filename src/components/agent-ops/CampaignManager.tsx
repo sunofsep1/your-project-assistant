@@ -18,13 +18,7 @@ interface Campaign {
   startDate: string;
 }
 
-const initialCampaigns: Campaign[] = [
-  { id: "1", name: "Spring Market Update", type: "newsletter", status: "completed", sent: 1250, opened: 485, clicked: 124, startDate: "Mar 1" },
-  { id: "2", name: "New Listing Alerts", type: "drip", status: "active", sent: 567, opened: 234, clicked: 89, startDate: "Jan 15" },
-  { id: "3", name: "Buyer Nurture Sequence", type: "drip", status: "active", sent: 342, opened: 156, clicked: 45, startDate: "Feb 1" },
-  { id: "4", name: "Just Sold Announcements", type: "email", status: "paused", sent: 890, opened: 356, clicked: 78, startDate: "Feb 20" },
-  { id: "5", name: "Monthly Market Report", type: "newsletter", status: "draft", sent: 0, opened: 0, clicked: 0, startDate: "-" },
-];
+const initialCampaigns: Campaign[] = [];
 
 const statusColors = {
   active: "bg-success/20 text-success border-success/30",

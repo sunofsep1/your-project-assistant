@@ -14,14 +14,7 @@ interface MarketingChannel {
   roi: number;
 }
 
-const channelData: MarketingChannel[] = [
-  { name: "Social Media", spend: 1200, leads: 45, closings: 2, revenue: 24000, roi: 1900 },
-  { name: "Google Ads", spend: 2500, leads: 89, closings: 4, revenue: 48000, roi: 1820 },
-  { name: "Direct Mail", spend: 800, leads: 12, closings: 1, revenue: 12000, roi: 1400 },
-  { name: "Email Marketing", spend: 150, leads: 28, closings: 2, revenue: 24000, roi: 15900 },
-  { name: "Open Houses", spend: 500, leads: 23, closings: 3, revenue: 36000, roi: 7100 },
-  { name: "Referral Program", spend: 1000, leads: 35, closings: 5, revenue: 60000, roi: 5900 },
-];
+const channelData: MarketingChannel[] = [];
 
 const chartData = channelData.map(c => ({
   name: c.name.split(" ")[0],
@@ -33,8 +26,8 @@ export function MarketingROI() {
   const totalSpend = channelData.reduce((acc, c) => acc + c.spend, 0);
   const totalRevenue = channelData.reduce((acc, c) => acc + c.revenue, 0);
   const totalLeads = channelData.reduce((acc, c) => acc + c.leads, 0);
-  const overallROI = Math.round((totalRevenue - totalSpend) / totalSpend * 100);
-  const costPerLead = Math.round(totalSpend / totalLeads);
+  const overallROI = totalSpend > 0 ? Math.round(((totalRevenue - totalSpend) / totalSpend) * 100) : 0;
+  const costPerLead = totalLeads > 0 ? Math.round(totalSpend / totalLeads) : 0;
 
   return (
     <Card className="bg-card border-border">

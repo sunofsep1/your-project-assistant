@@ -16,21 +16,9 @@ interface AnnualGoal {
   format: "number" | "currency";
 }
 
-const annualGoals: AnnualGoal[] = [
-  { id: "1", category: "Transactions", metric: "Total Closings", target: 24, current: 8, format: "number" },
-  { id: "2", category: "Volume", metric: "GCI", target: 240000, current: 85000, format: "currency" },
-  { id: "3", category: "Volume", metric: "Sales Volume", target: 12000000, current: 4250000, format: "currency" },
-  { id: "4", category: "Pipeline", metric: "Active Listings", target: 8, current: 3, format: "number" },
-  { id: "5", category: "Pipeline", metric: "Buyer Agreements", target: 12, current: 5, format: "number" },
-  { id: "6", category: "Marketing", metric: "SOI Contacts", target: 500, current: 342, format: "number" },
-];
+const annualGoals: AnnualGoal[] = [];
 
-const quarterlyMilestones = [
-  { quarter: "Q1", revenue: 60000, transactions: 6, status: "completed" },
-  { quarter: "Q2", revenue: 60000, transactions: 6, status: "in-progress" },
-  { quarter: "Q3", revenue: 60000, transactions: 6, status: "upcoming" },
-  { quarter: "Q4", revenue: 60000, transactions: 6, status: "upcoming" },
-];
+const quarterlyMilestones: { quarter: string; revenue: number; transactions: number; status: "completed" | "in-progress" | "upcoming" }[] = [];
 
 export function BusinessPlanWidget() {
   const formatValue = (value: number, format: "number" | "currency") => {

@@ -13,24 +13,15 @@ interface Competitor {
   strength: string;
 }
 
-const competitors: Competitor[] = [
-  { name: "You", marketShare: 8.5, listings: 12, avgPrice: 425000, strength: "Buyer representation" },
-  { name: "Smith Realty", marketShare: 15.2, listings: 28, avgPrice: 385000, strength: "Volume leader" },
-  { name: "Premier Homes", marketShare: 12.8, listings: 22, avgPrice: 520000, strength: "Luxury segment" },
-  { name: "Local First RE", marketShare: 9.4, listings: 15, avgPrice: 340000, strength: "First-time buyers" },
-  { name: "Metro Agents", marketShare: 7.2, listings: 10, avgPrice: 410000, strength: "New construction" },
-];
+const competitors: Competitor[] = [];
 
-const yourStrengths = [
-  { area: "Client Satisfaction", score: 95, benchmark: 82 },
-  { area: "Response Time", score: 92, benchmark: 75 },
-  { area: "Negotiation Success", score: 88, benchmark: 80 },
-  { area: "Marketing Reach", score: 72, benchmark: 85 },
-  { area: "Listing Inventory", score: 65, benchmark: 78 },
-];
+const yourStrengths: { area: string; score: number; benchmark: number }[] = [];
 
 export function CompetitiveAnalysis() {
-  const yourRank = competitors.findIndex(c => c.name === "You") + 1;
+  const yourRank = (() => {
+    const idx = competitors.findIndex((c) => c.name === "You");
+    return idx >= 0 ? idx + 1 : null;
+  })();
 
   return (
     <Card className="bg-card border-border">
