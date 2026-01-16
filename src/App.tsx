@@ -2,9 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
-import Index from "./pages/Index";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+
 import Dashboard from "./pages/Dashboard";
 import Contacts from "./pages/Contacts";
 import Listings from "./pages/Listings";
@@ -13,6 +15,8 @@ import Pipeline from "./pages/Pipeline";
 import Campaigns from "./pages/Campaigns";
 import Scripts from "./pages/Scripts";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import AgentDashboard from "./pages/agent-ops/AgentDashboard";
 import Numbers from "./pages/agent-ops/Numbers";
 import Goals from "./pages/agent-ops/Goals";
@@ -29,24 +33,28 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
-          <Route path="/contacts" element={<MainLayout><Contacts /></MainLayout>} />
-          <Route path="/listings" element={<MainLayout><Listings /></MainLayout>} />
-          <Route path="/appointments" element={<MainLayout><Appointments /></MainLayout>} />
-          <Route path="/pipeline" element={<MainLayout><Pipeline /></MainLayout>} />
-          <Route path="/campaigns" element={<MainLayout><Campaigns /></MainLayout>} />
-          <Route path="/scripts" element={<MainLayout><Scripts /></MainLayout>} />
-          <Route path="/agent-ops/dashboard" element={<MainLayout><AgentDashboard /></MainLayout>} />
-          <Route path="/agent-ops/numbers" element={<MainLayout><Numbers /></MainLayout>} />
-          <Route path="/agent-ops/goals" element={<MainLayout><Goals /></MainLayout>} />
-          <Route path="/agent-ops/prospecting" element={<MainLayout><Prospecting /></MainLayout>} />
-          <Route path="/agent-ops/marketing" element={<MainLayout><Marketing /></MainLayout>} />
-          <Route path="/agent-ops/strategy" element={<MainLayout><Strategy /></MainLayout>} />
-          <Route path="/agent-ops/settings" element={<MainLayout><Settings /></MainLayout>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/dashboard" element={<ProtectedRoute><MainLayout><Dashboard /></MainLayout></ProtectedRoute>} />
+            <Route path="/contacts" element={<ProtectedRoute><MainLayout><Contacts /></MainLayout></ProtectedRoute>} />
+            <Route path="/listings" element={<ProtectedRoute><MainLayout><Listings /></MainLayout></ProtectedRoute>} />
+            <Route path="/appointments" element={<ProtectedRoute><MainLayout><Appointments /></MainLayout></ProtectedRoute>} />
+            <Route path="/pipeline" element={<ProtectedRoute><MainLayout><Pipeline /></MainLayout></ProtectedRoute>} />
+            <Route path="/campaigns" element={<ProtectedRoute><MainLayout><Campaigns /></MainLayout></ProtectedRoute>} />
+            <Route path="/scripts" element={<ProtectedRoute><MainLayout><Scripts /></MainLayout></ProtectedRoute>} />
+            <Route path="/agent-ops/dashboard" element={<ProtectedRoute><MainLayout><AgentDashboard /></MainLayout></ProtectedRoute>} />
+            <Route path="/agent-ops/numbers" element={<ProtectedRoute><MainLayout><Numbers /></MainLayout></ProtectedRoute>} />
+            <Route path="/agent-ops/goals" element={<ProtectedRoute><MainLayout><Goals /></MainLayout></ProtectedRoute>} />
+            <Route path="/agent-ops/prospecting" element={<ProtectedRoute><MainLayout><Prospecting /></MainLayout></ProtectedRoute>} />
+            <Route path="/agent-ops/marketing" element={<ProtectedRoute><MainLayout><Marketing /></MainLayout></ProtectedRoute>} />
+            <Route path="/agent-ops/strategy" element={<ProtectedRoute><MainLayout><Strategy /></MainLayout></ProtectedRoute>} />
+            <Route path="/agent-ops/settings" element={<ProtectedRoute><MainLayout><Settings /></MainLayout></ProtectedRoute>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
