@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, TrendingUp, Megaphone, Calendar, ArrowUpRight, ArrowDownRight, Clock } from "lucide-react";
+import { Users, TrendingUp, Megaphone, Calendar, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useContacts } from "@/hooks/useContacts";
 import { useAppointments } from "@/hooks/useAppointments";
 import { format, formatDistanceToNow } from "date-fns";
+import { GoogleCalendarWidget } from "@/components/dashboard/GoogleCalendarWidget";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -140,17 +141,9 @@ export default function Dashboard() {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar Placeholder */}
+        {/* Google Calendar Widget */}
         <div className="lg:col-span-2">
-          <Card className="p-6 bg-card border-border min-h-[400px]">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Calendar</h3>
-            <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-              <div className="text-center">
-                <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Calendar integration coming soon</p>
-              </div>
-            </div>
-          </Card>
+          <GoogleCalendarWidget />
         </div>
 
         {/* Right Column */}
