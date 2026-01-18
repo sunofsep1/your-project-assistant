@@ -36,17 +36,12 @@ export function GoogleCalendarWidget() {
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        setLoading(false);
+        return;
+      }
 
-      const response = await supabase.functions.invoke("google-calendar", {
-        body: {},
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      // Handle the query parameter approach
-      const { data, error } = await fetch(
+      const response = await fetch(
         `https://agflprqqvsndkwlpscvt.supabase.co/functions/v1/google-calendar?action=events`,
         {
           headers: {
@@ -54,8 +49,9 @@ export function GoogleCalendarWidget() {
             "Content-Type": "application/json",
           },
         }
-      ).then(res => res.json().then(data => ({ data, error: null })))
-        .catch(error => ({ data: null, error }));
+      );
+
+      const data = await response.json();
 
       if (data?.needsAuth) {
         setNeedsAuth(true);
