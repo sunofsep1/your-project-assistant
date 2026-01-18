@@ -48,7 +48,8 @@ Deno.serve(async (req) => {
 
     if (action === "auth-url") {
       // Generate OAuth URL for Google Calendar
-      const redirectUri = `${url.origin}/google-calendar?action=callback`;
+      // Use the proper edge function URL format
+      const redirectUri = `https://agflprqqvsndkwlpscvt.supabase.co/functions/v1/google-calendar?action=callback`;
       const scope = encodeURIComponent("https://www.googleapis.com/auth/calendar.readonly");
       
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -61,6 +62,7 @@ Deno.serve(async (req) => {
         `&state=${user.id}`;
 
       console.log("Generated auth URL for user:", user.id);
+      console.log("Redirect URI:", redirectUri);
 
       return new Response(JSON.stringify({ authUrl }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -79,7 +81,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      const redirectUri = `${url.origin}/google-calendar?action=callback`;
+      const redirectUri = `https://agflprqqvsndkwlpscvt.supabase.co/functions/v1/google-calendar?action=callback`;
 
       // Exchange code for tokens
       const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
