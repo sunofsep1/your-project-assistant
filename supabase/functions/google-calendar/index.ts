@@ -20,64 +20,35 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get("action");
 
-    // Get the authorization header
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "No authorization header" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Create Supabase client
+    // Create Supabase client with service role for admin operations
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
-    // Get user from token
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-
-    if (userError || !user) {
-      console.error("Auth error:", userError);
-      return new Response(JSON.stringify({ error: "Invalid token" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    console.log("User authenticated:", user.id);
-
-    if (action === "auth-url") {
-      // Generate OAuth URL for Google Calendar
-      // Use the proper edge function URL format
-      const redirectUri = `https://agflprqqvsndkwlpscvt.supabase.co/functions/v1/google-calendar?action=callback`;
-      const scope = encodeURIComponent("https://www.googleapis.com/auth/calendar.readonly");
-      
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${GOOGLE_CLIENT_ID}` +
-        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&response_type=code` +
-        `&scope=${scope}` +
-        `&access_type=offline` +
-        `&prompt=consent` +
-        `&state=${user.id}`;
-
-      console.log("Generated auth URL for user:", user.id);
-      console.log("Redirect URI:", redirectUri);
-
-      return new Response(JSON.stringify({ authUrl }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
+    // Handle OAuth callback BEFORE auth check (Google redirects here without auth)
     if (action === "callback") {
-      // Handle OAuth callback
       const code = url.searchParams.get("code");
-      const state = url.searchParams.get("state");
+      const state = url.searchParams.get("state"); // This contains the user ID
+      const error = url.searchParams.get("error");
 
-      if (!code) {
-        return new Response(JSON.stringify({ error: "No authorization code" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+      console.log("OAuth callback received. State (userId):", state);
+
+      if (error) {
+        console.error("OAuth error:", error);
+        // Redirect to app with error
+        return new Response(null, {
+          status: 302,
+          headers: {
+            Location: `${SUPABASE_URL?.replace('.supabase.co', '.lovable.app').replace('https://agflprqqvsndkwlpscvt', 'https://id-preview--411c241c-49a8-45f4-8be3-1505dff49d25')}/dashboard?calendar_error=${encodeURIComponent(error)}`,
+          },
+        });
+      }
+
+      if (!code || !state) {
+        console.error("Missing code or state in callback");
+        return new Response(null, {
+          status: 302,
+          headers: {
+            Location: `https://id-preview--411c241c-49a8-45f4-8be3-1505dff49d25.lovable.app/dashboard?calendar_error=missing_params`,
+          },
         });
       }
 
@@ -100,17 +71,19 @@ Deno.serve(async (req) => {
 
       if (tokens.error) {
         console.error("Token exchange error:", tokens);
-        return new Response(JSON.stringify({ error: tokens.error_description || tokens.error }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(null, {
+          status: 302,
+          headers: {
+            Location: `https://id-preview--411c241c-49a8-45f4-8be3-1505dff49d25.lovable.app/dashboard?calendar_error=${encodeURIComponent(tokens.error_description || tokens.error)}`,
+          },
         });
       }
 
-      console.log("Token exchange successful for user:", state || user.id);
+      console.log("Token exchange successful for user:", state);
 
-      // Store tokens in user metadata
+      // Store tokens in user metadata using the user ID from state
       const { error: updateError } = await supabase.auth.admin.updateUserById(
-        state || user.id,
+        state,
         {
           user_metadata: {
             google_access_token: tokens.access_token,
@@ -122,13 +95,66 @@ Deno.serve(async (req) => {
 
       if (updateError) {
         console.error("Error storing tokens:", updateError);
-        return new Response(JSON.stringify({ error: "Failed to store tokens" }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(null, {
+          status: 302,
+          headers: {
+            Location: `https://id-preview--411c241c-49a8-45f4-8be3-1505dff49d25.lovable.app/dashboard?calendar_error=storage_failed`,
+          },
         });
       }
 
-      return new Response(JSON.stringify({ success: true }), {
+      console.log("Tokens stored successfully, redirecting to app");
+
+      // Redirect back to the app with success
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: `https://id-preview--411c241c-49a8-45f4-8be3-1505dff49d25.lovable.app/dashboard?calendar_connected=true`,
+        },
+      });
+    }
+
+    // For all other actions, require authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "No authorization header" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Get user from token
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      console.error("Auth error:", userError);
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    console.log("User authenticated:", user.id);
+
+    if (action === "auth-url") {
+      // Generate OAuth URL for Google Calendar
+      const redirectUri = `https://agflprqqvsndkwlpscvt.supabase.co/functions/v1/google-calendar?action=callback`;
+      const scope = encodeURIComponent("https://www.googleapis.com/auth/calendar.readonly");
+      
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${GOOGLE_CLIENT_ID}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&response_type=code` +
+        `&scope=${scope}` +
+        `&access_type=offline` +
+        `&prompt=consent` +
+        `&state=${user.id}`;
+
+      console.log("Generated auth URL for user:", user.id);
+      console.log("Redirect URI:", redirectUri);
+
+      return new Response(JSON.stringify({ authUrl }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
