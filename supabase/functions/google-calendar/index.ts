@@ -138,9 +138,9 @@ Deno.serve(async (req) => {
     console.log("User authenticated:", user.id);
 
     if (action === "auth-url") {
-      // Generate OAuth URL for Google Calendar
+      // Generate OAuth URL for Google Calendar with read+write scope
       const redirectUri = `https://agflprqqvsndkwlpscvt.supabase.co/functions/v1/google-calendar?action=callback`;
-      const scope = encodeURIComponent("https://www.googleapis.com/auth/calendar.readonly");
+      const scope = encodeURIComponent("https://www.googleapis.com/auth/calendar");
       
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${GOOGLE_CLIENT_ID}` +
@@ -268,6 +268,114 @@ Deno.serve(async (req) => {
       }
 
       return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "create-event") {
+      // Create a new event in Google Calendar
+      const { data: userData } = await supabase.auth.admin.getUserById(user.id);
+
+      if (!userData.user) {
+        return new Response(JSON.stringify({ error: "User not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      let accessToken = userData.user.user_metadata?.google_access_token;
+      const refreshToken = userData.user.user_metadata?.google_refresh_token;
+      const tokenExpiry = userData.user.user_metadata?.google_token_expiry;
+
+      if (!accessToken || !refreshToken) {
+        return new Response(JSON.stringify({ error: "Not connected", needsAuth: true }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Refresh token if expired
+      if (tokenExpiry && Date.now() > tokenExpiry - 60000) {
+        const refreshResponse = await fetch("https://oauth2.googleapis.com/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            client_id: GOOGLE_CLIENT_ID!,
+            client_secret: GOOGLE_CLIENT_SECRET!,
+            refresh_token: refreshToken,
+            grant_type: "refresh_token",
+          }),
+        });
+
+        const refreshData = await refreshResponse.json();
+        if (refreshData.access_token) {
+          accessToken = refreshData.access_token;
+          await supabase.auth.admin.updateUserById(user.id, {
+            user_metadata: {
+              ...userData.user.user_metadata,
+              google_access_token: refreshData.access_token,
+              google_token_expiry: Date.now() + (refreshData.expires_in * 1000),
+            },
+          });
+        }
+      }
+
+      // Parse request body
+      const body = await req.json();
+      const { summary, description, start, end, location } = body;
+
+      if (!summary || !start) {
+        return new Response(JSON.stringify({ error: "Missing required fields" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Build event object
+      const eventData: any = {
+        summary,
+        description: description || "",
+        start: {
+          dateTime: start,
+          timeZone: "Australia/Sydney",
+        },
+        end: {
+          dateTime: end || new Date(new Date(start).getTime() + 60 * 60 * 1000).toISOString(),
+          timeZone: "Australia/Sydney",
+        },
+      };
+
+      if (location) {
+        eventData.location = location;
+      }
+
+      console.log("Creating event:", eventData);
+
+      const createResponse = await fetch(
+        "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(eventData),
+        }
+      );
+
+      const createdEvent = await createResponse.json();
+
+      if (createdEvent.error) {
+        console.error("Google Calendar create error:", createdEvent.error);
+        return new Response(JSON.stringify({ error: createdEvent.error.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log("Event created successfully:", createdEvent.id);
+
+      return new Response(JSON.stringify({ event: createdEvent }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
