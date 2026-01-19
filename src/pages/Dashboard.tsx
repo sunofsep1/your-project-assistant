@@ -8,12 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, TrendingUp, Megaphone, Calendar, Clock } from "lucide-react";
+import { Users, TrendingUp, Megaphone, Calendar, Clock, Home } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useContacts } from "@/hooks/useContacts";
-import { useAppointments } from "@/hooks/useAppointments";
+import { useContacts, useCreateContact } from "@/hooks/useContacts";
+import { useAppointments, useCreateAppointment } from "@/hooks/useAppointments";
+import { useListings, useCreateListing, useUpdateListing } from "@/hooks/useListings";
+import { useLeads, useCreateLead } from "@/hooks/useLeads";
+import { usePosts, useCreatePost } from "@/hooks/usePosts";
 import { format, formatDistanceToNow } from "date-fns";
-import { GoogleCalendarWidget } from "@/components/dashboard/GoogleCalendarWidget";
+import { EnhancedCalendarWidget } from "@/components/dashboard/EnhancedCalendarWidget";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -23,87 +26,158 @@ export default function Dashboard() {
   const [dealDialogOpen, setDealDialogOpen] = useState(false);
   const [campaignDialogOpen, setCampaignDialogOpen] = useState(false);
   const [appointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
+  const [postDialogOpen, setPostDialogOpen] = useState(false);
 
   const [newContact, setNewContact] = useState({ name: "", email: "", phone: "" });
-  const [newDeal, setNewDeal] = useState({ title: "", value: "", stage: "prospect" });
+  const [newDeal, setNewDeal] = useState({ address: "", price: "", stage: "new", propertyType: "house" });
   const [newCampaign, setNewCampaign] = useState({ name: "", type: "email", description: "" });
   const [newAppointment, setNewAppointment] = useState({ title: "", date: "", time: "", location: "" });
+  const [newLead, setNewLead] = useState({ name: "", email: "", phone: "", source: "", propertyInterest: "" });
+  const [newPost, setNewPost] = useState({ title: "", content: "", platform: "facebook", scheduledDate: "" });
 
   // Fetch real data from database
   const { data: contacts = [] } = useContacts();
   const { data: appointments = [] } = useAppointments();
+  const { data: listings = [] } = useListings();
+  const { data: leads = [] } = useLeads();
+  const { data: posts = [] } = usePosts();
+
+  // Mutations
+  const createContact = useCreateContact();
+  const createAppointment = useCreateAppointment();
+  const createListing = useCreateListing();
+  const updateListing = useUpdateListing();
+  const createLead = useCreateLead();
+  const createPost = useCreatePost();
 
   const stats = [
-    { label: "Total Contacts", value: contacts.length, change: "", positive: true },
-    { label: "Active Deals", value: 0, change: "", positive: true },
-    { label: "Campaigns", value: 0, change: "", positive: true },
-    { label: "Appointments", value: appointments.length, change: "", positive: true },
+    { label: "Contacts", value: contacts.length, icon: Users },
+    { label: "Active Deals", value: listings.length, icon: TrendingUp },
+    { label: "Leads", value: leads.length, icon: Megaphone },
+    { label: "Appointments", value: appointments.length, icon: Calendar },
   ];
 
   // Build recent activity from real data
   const recentActivity = useMemo(() => {
     const activities: { type: string; message: string; time: string; date: Date }[] = [];
 
-    // Add recent contacts
-    contacts.slice(0, 5).forEach((contact) => {
+    contacts.slice(0, 3).forEach((contact) => {
       activities.push({
         type: "contact",
-        message: `New contact added: ${contact.name}`,
+        message: `New contact: ${contact.name}`,
         time: formatDistanceToNow(new Date(contact.created_at), { addSuffix: true }),
         date: new Date(contact.created_at),
       });
     });
 
-    // Add recent appointments
-    appointments.slice(0, 5).forEach((apt) => {
+    appointments.slice(0, 3).forEach((apt) => {
       activities.push({
         type: "appointment",
-        message: `Appointment scheduled: ${apt.title}`,
+        message: `Appointment: ${apt.title}`,
         time: formatDistanceToNow(new Date(apt.created_at), { addSuffix: true }),
         date: new Date(apt.created_at),
       });
     });
 
-    // Sort by date and take the most recent 5
+    listings.slice(0, 3).forEach((listing) => {
+      activities.push({
+        type: "listing",
+        message: `Listing: ${listing.address}`,
+        time: formatDistanceToNow(new Date(listing.created_at), { addSuffix: true }),
+        date: new Date(listing.created_at),
+      });
+    });
+
     return activities
       .sort((a, b) => b.date.getTime() - a.date.getTime())
       .slice(0, 5);
-  }, [contacts, appointments]);
+  }, [contacts, appointments, listings]);
 
-  const handleAddContact = () => {
+  const handleAddContact = async () => {
     if (!newContact.name.trim()) {
       toast({ title: "Error", description: "Please enter a contact name", variant: "destructive" });
       return;
     }
-    toast({ title: "Success", description: "Contact added! View in Contacts page." });
-    setNewContact({ name: "", email: "", phone: "" });
-    setContactDialogOpen(false);
-    navigate("/contacts");
+    try {
+      await createContact.mutateAsync({
+        name: newContact.name,
+        email: newContact.email || null,
+        phone: newContact.phone || null,
+      });
+      toast({ title: "Success", description: "Contact added!" });
+      setNewContact({ name: "", email: "", phone: "" });
+      setContactDialogOpen(false);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to add contact", variant: "destructive" });
+    }
   };
 
-  const handleAddDeal = () => {
-    if (!newDeal.title.trim()) {
-      toast({ title: "Error", description: "Please enter a deal title", variant: "destructive" });
+  const handleAddDeal = async () => {
+    if (!newDeal.address.trim()) {
+      toast({ title: "Error", description: "Please enter an address", variant: "destructive" });
       return;
     }
-    toast({ title: "Success", description: "Deal added! View in Pipeline." });
-    setNewDeal({ title: "", value: "", stage: "prospect" });
-    setDealDialogOpen(false);
-    navigate("/pipeline");
+    try {
+      await createListing.mutateAsync({
+        address: newDeal.address,
+        price: newDeal.price ? Number(newDeal.price) : null,
+        pipeline_stage: newDeal.stage,
+        property_type: newDeal.propertyType,
+      });
+      toast({ title: "Success", description: "Deal added to pipeline!" });
+      setNewDeal({ address: "", price: "", stage: "new", propertyType: "house" });
+      setDealDialogOpen(false);
+      navigate("/pipeline");
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to add deal", variant: "destructive" });
+    }
   };
 
-  const handleStartCampaign = () => {
-    if (!newCampaign.name.trim()) {
-      toast({ title: "Error", description: "Please enter a campaign name", variant: "destructive" });
+  const handleAddLead = async () => {
+    if (!newLead.name.trim()) {
+      toast({ title: "Error", description: "Please enter a name", variant: "destructive" });
       return;
     }
-    toast({ title: "Success", description: "Campaign started! View in Campaigns." });
-    setNewCampaign({ name: "", type: "email", description: "" });
-    setCampaignDialogOpen(false);
-    navigate("/campaigns");
+    try {
+      await createLead.mutateAsync({
+        name: newLead.name,
+        email: newLead.email || null,
+        phone: newLead.phone || null,
+        source: newLead.source || null,
+        property_interest: newLead.propertyInterest || null,
+      });
+      toast({ title: "Success", description: "Lead added!" });
+      setNewLead({ name: "", email: "", phone: "", source: "", propertyInterest: "" });
+      setLeadDialogOpen(false);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to add lead", variant: "destructive" });
+    }
   };
 
-  const handleScheduleAppointment = () => {
+  const handleAddPost = async () => {
+    if (!newPost.title.trim()) {
+      toast({ title: "Error", description: "Please enter a title", variant: "destructive" });
+      return;
+    }
+    try {
+      await createPost.mutateAsync({
+        title: newPost.title,
+        content: newPost.content || null,
+        platform: newPost.platform,
+        scheduled_date: newPost.scheduledDate || null,
+        status: newPost.scheduledDate ? "scheduled" : "draft",
+      });
+      toast({ title: "Success", description: "Post created!" });
+      setNewPost({ title: "", content: "", platform: "facebook", scheduledDate: "" });
+      setPostDialogOpen(false);
+      navigate("/agent-ops/marketing");
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to create post", variant: "destructive" });
+    }
+  };
+
+  const handleScheduleAppointment = async () => {
     if (!newAppointment.title.trim()) {
       toast({ title: "Error", description: "Please enter appointment title", variant: "destructive" });
       return;
@@ -112,10 +186,22 @@ export default function Dashboard() {
       toast({ title: "Error", description: "Please select a date", variant: "destructive" });
       return;
     }
-    toast({ title: "Success", description: "Appointment scheduled!" });
-    setNewAppointment({ title: "", date: "", time: "", location: "" });
-    setAppointmentDialogOpen(false);
-    navigate("/appointments");
+    try {
+      const dateTime = newAppointment.time 
+        ? `${newAppointment.date}T${newAppointment.time}:00`
+        : `${newAppointment.date}T09:00:00`;
+      
+      await createAppointment.mutateAsync({
+        title: newAppointment.title,
+        date: dateTime,
+        location: newAppointment.location || null,
+      });
+      toast({ title: "Success", description: "Appointment scheduled!" });
+      setNewAppointment({ title: "", date: "", time: "", location: "" });
+      setAppointmentDialogOpen(false);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to schedule appointment", variant: "destructive" });
+    }
   };
 
   return (
@@ -126,13 +212,16 @@ export default function Dashboard() {
       />
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {stats.map((stat, index) => (
           <Card key={index} className="p-6 bg-card border-border">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <stat.icon className="w-5 h-5 text-primary" />
+              </div>
               <div>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
-                <p className="text-3xl font-bold text-foreground mt-1">{stat.value}</p>
+                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
               </div>
             </div>
           </Card>
@@ -141,9 +230,9 @@ export default function Dashboard() {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Google Calendar Widget */}
+        {/* Enhanced Calendar Widget */}
         <div className="lg:col-span-2">
-          <GoogleCalendarWidget />
+          <EnhancedCalendarWidget />
         </div>
 
         {/* Right Column */}
@@ -174,34 +263,41 @@ export default function Dashboard() {
           {/* Quick Actions */}
           <Card className="p-6 bg-card border-border">
             <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setContactDialogOpen(true)}
-                className="flex items-center gap-3 p-4 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
               >
-                <Users className="w-5 h-5 text-primary" />
+                <Users className="w-4 h-4 text-primary" />
                 <span className="text-sm font-medium">Add Contact</span>
               </button>
               <button
                 onClick={() => setDealDialogOpen(true)}
-                className="flex items-center gap-3 p-4 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
               >
-                <TrendingUp className="w-5 h-5 text-success" />
-                <span className="text-sm font-medium">New Deal</span>
+                <TrendingUp className="w-4 h-4 text-success" />
+                <span className="text-sm font-medium">Add Deal</span>
               </button>
               <button
-                onClick={() => setCampaignDialogOpen(true)}
-                className="flex items-center gap-3 p-4 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                onClick={() => setLeadDialogOpen(true)}
+                className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
               >
-                <Megaphone className="w-5 h-5 text-warning" />
-                <span className="text-sm font-medium">Start Campaign</span>
+                <Megaphone className="w-4 h-4 text-warning" />
+                <span className="text-sm font-medium">Add Lead</span>
               </button>
               <button
                 onClick={() => setAppointmentDialogOpen(true)}
-                className="flex items-center gap-3 p-4 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
+                className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
               >
-                <Calendar className="w-5 h-5 text-info" />
+                <Calendar className="w-4 h-4 text-info" />
                 <span className="text-sm font-medium">Schedule</span>
+              </button>
+              <button
+                onClick={() => setPostDialogOpen(true)}
+                className="flex items-center gap-2 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors col-span-2"
+              >
+                <Home className="w-4 h-4 text-teal" />
+                <span className="text-sm font-medium">Create Post</span>
               </button>
             </div>
           </Card>
@@ -212,7 +308,7 @@ export default function Dashboard() {
       <Dialog open={contactDialogOpen} onOpenChange={setContactDialogOpen}>
         <DialogContent className="sm:max-w-[400px] bg-popover border-border">
           <DialogHeader>
-            <DialogTitle>Quick Add Contact</DialogTitle>
+            <DialogTitle>Add Contact</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <div className="space-y-2">
@@ -245,7 +341,9 @@ export default function Dashboard() {
           </div>
           <div className="flex justify-end gap-3 mt-6">
             <Button variant="outline" onClick={() => setContactDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddContact}>Add Contact</Button>
+            <Button onClick={handleAddContact} disabled={createContact.isPending}>
+              {createContact.isPending ? "Adding..." : "Add Contact"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -254,99 +352,210 @@ export default function Dashboard() {
       <Dialog open={dealDialogOpen} onOpenChange={setDealDialogOpen}>
         <DialogContent className="sm:max-w-[400px] bg-popover border-border">
           <DialogHeader>
-            <DialogTitle>New Deal</DialogTitle>
+            <DialogTitle>Add Deal</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label>Deal Title *</Label>
+              <Label>Property Address *</Label>
               <Input
-                placeholder="Deal title"
+                placeholder="123 Main Street, Sydney"
                 className="bg-input"
-                value={newDeal.title}
-                onChange={(e) => setNewDeal({ ...newDeal, title: e.target.value })}
+                value={newDeal.address}
+                onChange={(e) => setNewDeal({ ...newDeal, address: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Value</Label>
+              <Label>Price</Label>
               <Input
                 type="number"
                 placeholder="0"
                 className="bg-input"
-                value={newDeal.value}
-                onChange={(e) => setNewDeal({ ...newDeal, value: e.target.value })}
+                value={newDeal.price}
+                onChange={(e) => setNewDeal({ ...newDeal, price: e.target.value })}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Stage</Label>
-              <Select
-                value={newDeal.stage}
-                onValueChange={(value) => setNewDeal({ ...newDeal, stage: value })}
-              >
-                <SelectTrigger className="bg-input">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="prospect">Prospect</SelectItem>
-                  <SelectItem value="qualified">Qualified</SelectItem>
-                  <SelectItem value="under-offer">Under Offer</SelectItem>
-                  <SelectItem value="due-diligence">Due Diligence</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Property Type</Label>
+                <Select
+                  value={newDeal.propertyType}
+                  onValueChange={(value) => setNewDeal({ ...newDeal, propertyType: value })}
+                >
+                  <SelectTrigger className="bg-input">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="house">House</SelectItem>
+                    <SelectItem value="apartment">Apartment</SelectItem>
+                    <SelectItem value="townhouse">Townhouse</SelectItem>
+                    <SelectItem value="land">Land</SelectItem>
+                    <SelectItem value="commercial">Commercial</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Stage</Label>
+                <Select
+                  value={newDeal.stage}
+                  onValueChange={(value) => setNewDeal({ ...newDeal, stage: value })}
+                >
+                  <SelectTrigger className="bg-input">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="contacted">Contacted</SelectItem>
+                    <SelectItem value="inspection">Inspection</SelectItem>
+                    <SelectItem value="offer">Offer</SelectItem>
+                    <SelectItem value="under-contract">Under Contract</SelectItem>
+                    <SelectItem value="settled">Settled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           <div className="flex justify-end gap-3 mt-6">
             <Button variant="outline" onClick={() => setDealDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddDeal}>Add Deal</Button>
+            <Button onClick={handleAddDeal} disabled={createListing.isPending}>
+              {createListing.isPending ? "Adding..." : "Add Deal"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Start Campaign Dialog */}
-      <Dialog open={campaignDialogOpen} onOpenChange={setCampaignDialogOpen}>
+      {/* Add Lead Dialog */}
+      <Dialog open={leadDialogOpen} onOpenChange={setLeadDialogOpen}>
         <DialogContent className="sm:max-w-[400px] bg-popover border-border">
           <DialogHeader>
-            <DialogTitle>Start Campaign</DialogTitle>
+            <DialogTitle>Add Lead</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label>Campaign Name *</Label>
+              <Label>Name *</Label>
               <Input
-                placeholder="Campaign name"
+                placeholder="Lead name"
                 className="bg-input"
-                value={newCampaign.name}
-                onChange={(e) => setNewCampaign({ ...newCampaign, name: e.target.value })}
+                value={newLead.name}
+                onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input
+                  placeholder="email@example.com"
+                  className="bg-input"
+                  value={newLead.email}
+                  onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input
+                  placeholder="0400 000 000"
+                  className="bg-input"
+                  value={newLead.phone}
+                  onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
+                />
+              </div>
+            </div>
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label>Source</Label>
               <Select
-                value={newCampaign.type}
-                onValueChange={(value) => setNewCampaign({ ...newCampaign, type: value })}
+                value={newLead.source}
+                onValueChange={(value) => setNewLead({ ...newLead, source: value })}
               >
                 <SelectTrigger className="bg-input">
-                  <SelectValue />
+                  <SelectValue placeholder="Select source..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="sms">SMS</SelectItem>
+                  <SelectItem value="website">Website</SelectItem>
+                  <SelectItem value="referral">Referral</SelectItem>
                   <SelectItem value="social">Social Media</SelectItem>
-                  <SelectItem value="call">Call</SelectItem>
+                  <SelectItem value="open-home">Open Home</SelectItem>
+                  <SelectItem value="cold-call">Cold Call</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                placeholder="Campaign description..."
-                className="bg-input min-h-[80px]"
-                value={newCampaign.description}
-                onChange={(e) => setNewCampaign({ ...newCampaign, description: e.target.value })}
+              <Label>Property Interest</Label>
+              <Input
+                placeholder="Looking for 3-bed house in Bondi"
+                className="bg-input"
+                value={newLead.propertyInterest}
+                onChange={(e) => setNewLead({ ...newLead, propertyInterest: e.target.value })}
               />
             </div>
           </div>
           <div className="flex justify-end gap-3 mt-6">
-            <Button variant="outline" onClick={() => setCampaignDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleStartCampaign}>Start Campaign</Button>
+            <Button variant="outline" onClick={() => setLeadDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddLead} disabled={createLead.isPending}>
+              {createLead.isPending ? "Adding..." : "Add Lead"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Post Dialog */}
+      <Dialog open={postDialogOpen} onOpenChange={setPostDialogOpen}>
+        <DialogContent className="sm:max-w-[400px] bg-popover border-border">
+          <DialogHeader>
+            <DialogTitle>Create Post</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label>Title *</Label>
+              <Input
+                placeholder="Post title"
+                className="bg-input"
+                value={newPost.title}
+                onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Content</Label>
+              <Textarea
+                placeholder="Write your post content..."
+                className="bg-input min-h-[100px]"
+                value={newPost.content}
+                onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Platform</Label>
+                <Select
+                  value={newPost.platform}
+                  onValueChange={(value) => setNewPost({ ...newPost, platform: value })}
+                >
+                  <SelectTrigger className="bg-input">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="facebook">Facebook</SelectItem>
+                    <SelectItem value="instagram">Instagram</SelectItem>
+                    <SelectItem value="linkedin">LinkedIn</SelectItem>
+                    <SelectItem value="email">Email</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Schedule</Label>
+                <Input
+                  type="date"
+                  className="bg-input"
+                  value={newPost.scheduledDate}
+                  onChange={(e) => setNewPost({ ...newPost, scheduledDate: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setPostDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddPost} disabled={createPost.isPending}>
+              {createPost.isPending ? "Creating..." : "Create Post"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -399,7 +608,9 @@ export default function Dashboard() {
           </div>
           <div className="flex justify-end gap-3 mt-6">
             <Button variant="outline" onClick={() => setAppointmentDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleScheduleAppointment}>Schedule</Button>
+            <Button onClick={handleScheduleAppointment} disabled={createAppointment.isPending}>
+              {createAppointment.isPending ? "Scheduling..." : "Schedule"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

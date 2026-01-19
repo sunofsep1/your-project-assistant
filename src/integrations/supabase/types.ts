@@ -184,6 +184,57 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          property_interest: string | null
+          source: string | null
+          status: string | null
+          timeline: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          property_interest?: string | null
+          source?: string | null
+          status?: string | null
+          timeline?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          property_interest?: string | null
+          source?: string | null
+          status?: string | null
+          timeline?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           address: string
@@ -192,6 +243,7 @@ export type Database = {
           created_at: string
           id: string
           notes: string | null
+          pipeline_stage: string | null
           price: number | null
           property_type: string | null
           status: string | null
@@ -205,6 +257,7 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          pipeline_stage?: string | null
           price?: number | null
           property_type?: string | null
           status?: string | null
@@ -218,6 +271,7 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          pipeline_stage?: string | null
           price?: number | null
           property_type?: string | null
           status?: string | null
@@ -225,6 +279,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      posts: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: string
+          listing_id: string | null
+          platform: string | null
+          published_date: string | null
+          scheduled_date: string | null
+          status: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          platform?: string | null
+          published_date?: string | null
+          scheduled_date?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          platform?: string | null
+          published_date?: string | null
+          scheduled_date?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
